@@ -5,19 +5,19 @@ import uvicorn
 
 app = FastAPI()
 
-URL = "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
+BASE_URL = "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/{year}/visa-bulletin-for-{month}-{year}.html"
 
-def fetch_visa_bulletin():
+def fetch_visa_bulletin(year: int, month: str):
+    url = BASE_URL.format(year=year, month=month.lower())
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
-    response = requests.get(URL, headers=headers)
+    response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        return {"error": "Failed to fetch the page"}
+        return {"error": "Failed to fetch the page", "url": url}
 
     soup = BeautifulSoup(response.text, "html.parser")
     
-    # Find the section containing the Visa Bulletin tables
     sections = soup.find_all("section", class_="tsg-rwd-table-container")
     
     if not sections:
@@ -46,10 +46,9 @@ def fetch_visa_bulletin():
     
     return visa_bulletin_data if visa_bulletin_data else {"error": "No valid data found"}
 
-
-@app.get("/visa-bulletin")
-def get_visa_bulletin():
-    return fetch_visa_bulletin()
+@app.get("/visa-bulletin/{year}/{month}")
+def get_visa_bulletin(year: int, month: str):
+    return fetch_visa_bulletin(year, month)
 
 @app.get("/")
 def home():
