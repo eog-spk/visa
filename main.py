@@ -1,3 +1,12 @@
+from fastapi import FastAPI
+import requests
+from bs4 import BeautifulSoup
+import uvicorn
+
+app = FastAPI()
+
+URL = "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
+
 def fetch_visa_bulletin():
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -36,6 +45,7 @@ def fetch_visa_bulletin():
                 })
     
     return visa_bulletin_data if visa_bulletin_data else {"error": "No valid data found"}
+
 
 @app.get("/visa-bulletin")
 def get_visa_bulletin():
