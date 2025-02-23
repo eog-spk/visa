@@ -1,25 +1,26 @@
-from fastapi import FastAPI
-import requests
-from bs4 import BeautifulSoup
-import uvicorn
-
-app = FastAPI()
-
-URL = "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
-
 def fetch_visa_bulletin():
-    response = requests.get(URL)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    response = requests.get(URL, headers=headers)
     if response.status_code != 200:
         return {"error": "Failed to fetch the page"}
 
     soup = BeautifulSoup(response.text, "html.parser")
-    tables = soup.find_all("table")
-    if not tables:
-        return {"error": "No tables found on the page"}
+    
+    # Find the section containing the Visa Bulletin tables
+    sections = soup.find_all("section", class_="tsg-rwd-table-container")
+    
+    if not sections:
+        return {"error": "No Visa Bulletin data found"}
 
     visa_bulletin_data = []
     
-    for table in tables:
+    for section in sections:
+        table = section.find("table")
+        if not table:
+            continue
+
         rows = table.find_all("tr")
         for row in rows[1:]:  # Skipping the header row
             columns = row.find_all("td")
@@ -34,15 +35,5 @@ def fetch_visa_bulletin():
                     "filingDate": filing_date
                 })
     
-    return visa_bulletin_data
+    return visa_bulletin_data if visa_bulletin_data else {"error": "No valid data found"}
 
-@app.get("/visa-bulletin")
-def get_visa_bulletin():
-    return fetch_visa_bulletin()
-
-@app.get("/")
-def home():
-    return {"message": "Visa Bulletin API is running"}
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
