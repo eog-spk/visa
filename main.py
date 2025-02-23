@@ -37,3 +37,13 @@ def fetch_visa_bulletin():
     
     return visa_bulletin_data if visa_bulletin_data else {"error": "No valid data found"}
 
+@app.get("/visa-bulletin")
+def get_visa_bulletin():
+    return fetch_visa_bulletin()
+
+@app.get("/")
+def home():
+    return {"message": "Visa Bulletin API is running"}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
